@@ -1,0 +1,8 @@
+{
+    "vk_token": "PLACE_HERE_YOUR_VK_TOKEN",
+    "vk_group_id": "URL to your public without https://vk.com/",
+    "tg_token": "Token your telegram bot",
+    "tg_chat_id": "ID your tg channel like @channel",
+    "text_for_replace": "Write here text for deleting, like local tags or delete everything here",
+    "previous_post_date": 0 (Temporary number for verification. For first run may set 0. this text must be deleted)
+}
