@@ -1,4 +1,4 @@
-import os, requests, time, datetime, json
+import os, requests, time, datetime, json, telebot, yt_dlp, subprocess
 
 def load_config(filename):
     with open(filename, "r", encoding='utf-8') as file:
