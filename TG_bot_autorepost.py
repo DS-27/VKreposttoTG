@@ -1,4 +1,4 @@
-import os, requests, time, datetime, json, logging
+import os, requests, time, datetime, json
 
 def load_config(filename):
     with open(filename, "r", encoding='utf-8') as file:
@@ -16,13 +16,6 @@ def get_max_photo_url(photo_sizes):
             max_size = size['height'] * size['width']
             max_size_url = size['url']
     return max_size_url
-
-def log_requests(request_text, response_text):
-    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open('request_log.txt', 'a', encoding='utf-8') as log_file:
-        log_file.write(f'{current_time} - Request: {request_text}\n')
-        log_file.write(f'{current_time} - Response: {response_text}\n\n')
-
 
 def process_group_config(config_path):
     config = load_config(config_path)
@@ -63,7 +56,6 @@ def process_group_config(config_path):
             'caption': text
         }
         response = requests.post(tg_api_url, json=payload)
-        log_requests(f'Telegram Request: {tg_api_url}, Payload: {payload}', response.text)
 
         config["previous_post_date"] = int(last_post_date)  # Обновляем значение в config
         save_config(config_path, config)  # Сохраняем обновленный config в файл
@@ -77,20 +69,16 @@ def process_group_config(config_path):
                 "chat_id": tg_chat_id,
                 "text": error_text
             })
-            log_requests(f'Telegram Error Request: {method}, Data: {{"chat_id": {tg_chat_id}, "text": "{error_text}"}}', error_post.text)
-            logging.error(f'Telegram API вернул ошибку: {error_text}')
 
         print(f'{vk_group_id}: Прошлый - {previous_post_date}. Нынешний - {last_post_date}. Пост отправлен. {current_time}. Код: {response}.')
     else:
         print(f'{vk_group_id}: Прошлый - {previous_post_date}. Нынешний - {last_post_date}. Поста нет. {current_time}')
 
 # Указываете папку с конфигами
-config_folder = "I:\\Users\\DS27\\1\\Кодинг\\AutoRepostBot\\grou"
-logging.basicConfig(filename='script_log.txt', level=logging.DEBUG, format='%(asctime)s [%(levelname)s]: %(message)s', encoding='utf-8')
+config_folder = "groups"
 
 while True:
     try:
-        logging.info("Начало новой итерации цикла.")
         # Получаем список файлов в указанной папке
         config_files = os.listdir(config_folder)
         for config_file in config_files:
@@ -101,6 +89,6 @@ while True:
             if config_file.endswith(".json") and os.path.isfile(config_path):
                 process_group_config(config_path)
     except Exception as e:
-        logging.error(f"Произошла ошибка: {e}")
+        pass
    
     time.sleep(50)
