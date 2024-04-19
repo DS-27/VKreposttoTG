@@ -82,12 +82,14 @@ while True:
         # Получаем список файлов в указанной папке
         config_files = os.listdir(config_folder)
         for config_file in config_files:
-            # Полный путь к файлу
-            config_path = os.path.join(config_folder, config_file)
-            
-            # Проверяем, является ли файл JSON
-            if config_file.endswith(".json") and os.path.isfile(config_path):
-                process_group_config(config_path)
+            if not config_file == 'config_example.json':
+                # Полный путь к файлу
+                config_path = os.path.join(config_folder, config_file)
+                
+                # Проверяем, является ли файл JSON
+                if config_file.endswith(".json") and os.path.isfile(config_path):
+                    process_group_config(config_path)
+            else: pass 
     except Exception as e:
         pass
    

@@ -1,7 +1,0 @@
-2024-04-19 07:56:55,892 [INFO]: Начало новой итерации цикла.
-2024-04-19 07:56:55,957 [DEBUG]: Starting new HTTPS connection (1): api.vk.com:443
-2024-04-19 07:56:56,135 [DEBUG]: https://api.vk.com:443 "GET /method/wall.get?access_token=0681cbd00681cbd00681cbd05b05926c7d006810681cbd062be210b12c09ceeb2b9b390&v=5.199&domain=ds27_sd&count=1&offset=1 HTTP/1.1" 200 7452
-2024-04-19 07:56:56,143 [DEBUG]: Starting new HTTPS connection (1): api.vk.com:443
-2024-04-19 07:56:56,259 [DEBUG]: https://api.vk.com:443 "GET /method/wall.get?access_token=0681cbd00681cbd00681cbd05b05926c7d006810681cbd062be210b12c09ceeb2b9b390&v=5.199&domain=club223953100&count=1&offset=1 HTTP/1.1" 200 6033
-2024-04-19 07:56:56,263 [DEBUG]: Starting new HTTPS connection (1): api.vk.com:443
-2024-04-19 07:56:56,367 [DEBUG]: https://api.vk.com:443 "GET /method/wall.get?access_token=0681cbd00681cbd00681cbd05b05926c7d006810681cbd062be210b12c09ceeb2b9b390&v=5.199&domain=horny_arts&count=1&offset=1 HTTP/1.1" 200 5137
