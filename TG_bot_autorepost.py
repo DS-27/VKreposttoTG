@@ -187,7 +187,7 @@ def process_group_config(config_path):
     tg_chat_id = config["tg_chat_id"]
     text_for_replace = config["text_for_replace"]
     previous_post_date = int(config["previous_post_date"])  # Преобразуем в int
-    offset = 0
+    offset = 1
     count = 1
     
     vk_api_url = f'https://api.vk.com/method/wall.get?access_token={vk_token}&v=5.199&domain={vk_group_id}&count={count}&offset={offset}'
@@ -213,7 +213,7 @@ while True:
         # Получаем список файлов в указанной папке
         config_files = os.listdir(config_folder)
         for config_file in config_files:
-            if not config_file == 'config_example':
+            if not config_file == 'config_example.json':
                 # Полный путь к файлу
                 config_path = os.path.join(config_folder, config_file)
                 # Проверяем, является ли файл JSON
