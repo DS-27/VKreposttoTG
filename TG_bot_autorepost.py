@@ -94,8 +94,7 @@ def video_downloader(attachment, video_url, output_path, media, text):
         text += f"\n{video_url}"
     return media, text
 
-def repost_to_tg (data, text_for_replace, bot, tg_chat_id):
-        post = data[0]
+def repost_to_tg (post, text_for_replace, bot, tg_chat_id):
         text = post['text']
         text = text.replace(text_for_replace, "")
         text = text[:1024]
@@ -178,6 +177,22 @@ def repost_to_tg (data, text_for_replace, bot, tg_chat_id):
 
         clear_folder("AutoRepostBot/tmp")
 
+def find_missing_post(dates, previous_post_date):
+    new_main_date_index = None
+    previous_date_index = None
+
+    for index, date in enumerate(dates):
+        if date <= previous_post_date:
+            new_main_date_index = previous_date_index
+            break
+        previous_date_index = index
+
+    # Если ни одна дата не подошла по условию
+    if new_main_date_index is None:
+        new_main_date_index = len(dates) - 1
+
+    return new_main_date_index
+
 def process_group_config(config_path):
     config = load_config(config_path)
 
@@ -188,16 +203,19 @@ def process_group_config(config_path):
     text_for_replace = config["text_for_replace"]
     previous_post_date = int(config["previous_post_date"])  # Преобразуем в int
     offset = 1
-    count = 1
+    count = 200
     
     vk_api_url = f'https://api.vk.com/method/wall.get?access_token={vk_token}&v=5.199&domain={vk_group_id}&count={count}&offset={offset}'
     response = requests.get(vk_api_url)
     data = response.json()['response']['items']
-    last_post_date = response.json()['response']['items'][0]['date']
+    dates = [item['date'] for item in data]
     current_time = datetime.datetime.now().strftime('%H:%M:%S')
-
+    new_main_date_index = find_missing_post(dates, previous_post_date)
+    last_post_date = data[new_main_date_index]['date']
+    post_data = data[new_main_date_index]
+    
     if last_post_date > previous_post_date:
-        repost_to_tg (data, text_for_replace, bot, tg_chat_id)
+        repost_to_tg (post_data, text_for_replace, bot, tg_chat_id)
         config["previous_post_date"] = int(last_post_date)  # Обновляем значение в config
         save_config(config_path, config)  # Сохраняем обновленный config в файл
         print(f'{vk_group_id}: Прошлый - {previous_post_date}. Нынешний - {last_post_date}. Пост отправлен. {current_time}. Код: {response}.')
