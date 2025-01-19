@@ -1,5 +1,4 @@
-import os, requests, time, datetime, json, telebot, yt_dlp, subprocess
-
+import os, requests, time, datetime, json, telebot
 
 def load_config(filename):
     with open(filename, "r", encoding='utf-8') as file:
@@ -30,152 +29,85 @@ def clear_folder(folder_path):
     else:
         pass
 
-# def video_downloader (attachment, video_url, output_path, media, text):
-#     formats_output = subprocess.run(['yt-dlp', '-F', video_url], capture_output=True, text=True)
-#     formats = formats_output.stdout
-    
-#     # Печатаем список форматов для отладки
-#     print("Доступные форматы для видео:")
-#     print(formats)
-#     # Разбиваем вывод на строки
-#     lines = formats.split('\n')
-#     suitable_formats = []
-#     # Ищем форматы с размером файла менее 20 МБ и выбираем первый подходящий
-#     max_filesize = 0
-#     format_id = None
-#     for line in lines:
-#         if 'MiB' in line:
-#             filesize = float(line.split('MiB')[0].split('~')[-1].strip())
-#             if filesize < 50 and filesize > max_filesize:  # Учитываем только подходящие форматы с максимальным размером
-#                 format_id = line.split()[0]
-#                 max_filesize = filesize
-#     # Если формат был найден, загружаем видео с использованием этого формата
-#     if format_id:
-#         # Если формат был найден, загружаем видео с использованием этого формата
-#         output_filename = f"{output_path}/{attachment['video']['title']}.mp4"  # Имя файла для сохранения
-#         try:
-#             subprocess.run(['yt-dlp', '-f', format_id, '-o', output_filename, video_url], check=True)
-#             if not media:
-#                 media.append(telebot.types.InputMediaVideo(open(output_filename, 'rb'), caption=text))
-#             else:
-#                 media.append(telebot.types.InputMediaVideo(open(output_filename, 'rb')))
-#         except subprocess.CalledProcessError as e:
-#             text += f"\n{video_url}"
-#     return media, text
+def repost_to_tg(post, text_for_replace, bot, tg_chat_id):
+    print('repost_to_tg begin')
+    text = post['text']
+    text = text.replace(text_for_replace, "")
 
-def video_downloader(attachment, video_url, output_path, media, text):
-    formats_output = subprocess.run(['yt-dlp', '--list-formats', video_url], capture_output=True, text=True)
-    formats = formats_output.stdout
-    # Разбиваем вывод на строки
-    lines = formats.split('\n')
-    suitable_formats = []
-    # Ищем форматы с размером файла менее 50 МБ и выбираем первый подходящий
-    format_id = None  # Инициализируем переменную format_id здесь
-    for line in lines:
-        if 'MiB' in line:
-            filesize = float(line.split('MiB')[0].split('~')[-1].strip())
-            if filesize < 50:
-                format_id = line.split()[0]
-                suitable_formats.append((format_id, filesize))
-                break  # Прерываем цикл после нахождения первого подходящего формата
-    # Если формат был найден, загружаем видео с использованием этого формата
-    if format_id:
-        # Если формат был найден, загружаем видео с использованием этого формата
-        output_filename = f"{output_path}/{attachment['video']['title']}.mp4"  # Имя файла для сохранения
-        try:
-            subprocess.run(['yt-dlp', '-f', format_id, '-o', output_filename, video_url], check=True)
-            if not media:
-                media.append(telebot.types.InputMediaVideo(open(output_filename, 'rb'), caption=text))
-            else:
-                media.append(telebot.types.InputMediaVideo(open(output_filename, 'rb')))
-        except subprocess.CalledProcessError as e:
-            text += f"\n{video_url}"
-    else:
-        text += f"\n{video_url}"
-    return media, text
+    # Проверяем наличие репоста
+    if 'copy_history' in post and len(post['copy_history']) > 0:
+        copy_post = post['copy']['copy_history'][0]
+        from_id = copy_post.get('from_id')
+        post_id = copy_post.get('id')
+        if from_id and post_id:
+            text += f"\nhttps://vk.com/wall{from_id}_{post_id}"
 
-def repost_to_tg (post, text_for_replace, bot, tg_chat_id):
-        text = post['text']
-        text = text.replace(text_for_replace, "")
-        text = text[:1024]
-        media = []
-        audio = []
-        doc = []
+    media = []
+    audio = []
+    doc = []
 
-        for attachment in post.get('attachments', []):
-            if attachment['type'] == 'photo':
-                attachment_url = get_max_photo_url(attachment['photo']['sizes'])
-                if not media:
-                    media.append(telebot.types.InputMediaPhoto(attachment_url, caption=text))
-                else:
-                    media.append(telebot.types.InputMediaPhoto(attachment_url))
+    for attachment in post.get('attachments', []):
+        if attachment['type'] == 'photo':
+            attachment_url = get_max_photo_url(attachment['photo']['sizes'])
+            media.append(telebot.types.InputMediaPhoto(attachment_url))
 
-            if attachment['type'] == 'video':
-                attachment_url = f'https://vk.com/video{attachment["video"]["owner_id"]}_{attachment["video"]["id"]}'
-                # media, text = video_downloader (attachment, attachment_url, "AutoRepostBot/tmp", media, text)
-                text += attachment_url
+        if attachment['type'] == 'video':
+            attachment_url = f'https://vk.com/video{attachment["video"]["owner_id"]}_{attachment["video"]["id"]}'
+            text += attachment_url
 
-            if attachment['type'] == 'audio':
-                audio_url = attachment['audio']['url']
-                response = requests.get(audio_url, stream=True)
-                track_title = f"{attachment['audio']['artist']} - {attachment['audio']['title']}"
-                if not media and not audio:
-                    audio.append(telebot.types.InputMediaAudio(response.content, caption=text, title=track_title))
-                else:
-                    audio.append(telebot.types.InputMediaAudio(response.content, title=track_title))
+        if attachment['type'] == 'audio':
+            audio_url = attachment['audio']['url']
+            response = requests.get(audio_url, stream=True)
+            track_title = f"{attachment['audio']['artist']} - {attachment['audio']['title']}"
+            audio.append(telebot.types.InputMediaAudio(response.content, title=track_title))
 
-            if attachment['type'] == 'doc':
-                if not media and not audio and not doc:
-                    doc.append(telebot.types.InputMediaDocument(attachment['doc']['url'], caption=text))
-                else:
-                    doc.append(telebot.types.InputMediaDocument(attachment['doc']['url']))
-        
+        if attachment['type'] == 'doc':
+            doc.append(telebot.types.InputMediaDocument(attachment['doc']['url']))
+
+    # Проверяем длину текста и отправляем его отдельно
+    if len(text) > 1024:
+        text = text[:4096]
+        media_part = [media[0]] if media else []
         if media:
             try:
-                print ('Media send begin')
                 bot.send_media_group(tg_chat_id, media)
-                print ('Media send')
             except Exception as e:
-                bot.send_message(tg_chat_id, "Ошибка при отправке поста с картинкой и/или видео")
+                bot.send_message(tg_chat_id, "Ошибка при отправке медиа")
+        
+        try:
+            bot.send_message(tg_chat_id, text)
+        except Exception as e:
+            bot.send_message(tg_chat_id, "Ошибка при отправке части текста")
 
-        if audio:
+    else:
+        # Если длина текста не превышает 1024 символов
+        if media:
             try:
-                print ('Audio send begin')
-                bot.send_media_group(tg_chat_id, audio)
-                print ('Audio send')
+                media[0].caption = text
+                bot.send_media_group(tg_chat_id, media)
             except Exception as e:
-                bot.send_message(tg_chat_id, "Ошибка при отправке поста с аудио")
-                
-        if doc:
-            try:
-                print ('Documents send begin')
-                bot.send_media_group(tg_chat_id, doc)
-                print ('Documents send')
-            except Exception as e:
-                bot.send_message(tg_chat_id, "Ошибка при отправке поста с документом")
-
-        if not media and not audio and not doc:
+                bot.send_message(tg_chat_id, "Ошибка при отправке поста с медиа")
+        else:
             try:
                 bot.send_message(tg_chat_id, text)
             except Exception as e:
-                bot.send_message(tg_chat_id, "Ошибка при отправке поста с текстом")
-            
-        # if response.status_code != 200:
-        #     url = "https://api.telegram.org/bot"
-        #     url += tg_token
-        #     method = url + "/sendMessage"
-        #     error_text = f'Ошибка отправления. Код ошибки: {response.status_code}, Текст ошибки: {response.text}'
-        #     error_post = requests.post(method, data={
-        #         "chat_id": tg_chat_id,
-        #         "text": error_text
-        #     })
+                bot.send_message(tg_chat_id, "Ошибка при отправке текста")
 
-        # Закрываем все файлы после отправки поста
-        for file in media:
-            if isinstance(file, telebot.types.InputMediaVideo):
-                file.media.close()
+    # Отправка аудио отдельно
+    if audio:
+        try:
+            audio[0].caption = text
+            bot.send_media_group(tg_chat_id, audio)
+        except Exception as e:
+            bot.send_message(tg_chat_id, "Ошибка при отправке аудио")
 
-        clear_folder("AutoRepostBot/tmp")
+    # Отправка документов отдельно
+    if doc:
+        try:
+            doc[0].caption = text
+            bot.send_media_group(tg_chat_id, doc)
+        except Exception as e:
+            bot.send_message(tg_chat_id, "Ошибка при отправке документов")
 
 def find_missing_post(dates, previous_post_date):
     new_main_date_index = None
@@ -202,8 +134,8 @@ def process_group_config(config_path):
     tg_chat_id = config["tg_chat_id"]
     text_for_replace = config["text_for_replace"]
     previous_post_date = int(config["previous_post_date"])  # Преобразуем в int
-    offset = 1
-    count = 200
+    offset = int(config["offset"])
+    count = 50
     
     vk_api_url = f'https://api.vk.com/method/wall.get?access_token={vk_token}&v=5.199&domain={vk_group_id}&count={count}&offset={offset}'
     response = requests.get(vk_api_url)
@@ -223,7 +155,8 @@ def process_group_config(config_path):
         print(f'{vk_group_id}: Прошлый - {previous_post_date}. Нынешний - {last_post_date}. Поста нет. {current_time}')
 
 # Путь к папке с конфиг
-config_folder = "groups"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_folder = os.path.join(script_dir, 'groups')
 n = 30 # Таймаут между циклами в секундах
 
 while True:
