@@ -17,18 +17,6 @@ def get_max_photo_url(photo_sizes):
             max_size_url = size['url']
     return max_size_url
 
-def clear_folder(folder_path):
-    if os.path.exists(folder_path):                         # Проверяем, существует ли путь к папке
-        for root, dirs, files in os.walk(folder_path):      # Получаем список всех файлов и подпапок в папке
-            for file in files:                              # Удаляем все файлы в текущей папке
-                file_path = os.path.join(root, file)
-                os.remove(file_path)
-            for dir in dirs:                                # Удаляем все подпапки в текущей папке
-                dir_path = os.path.join(root, dir)
-                os.rmdir(dir_path)
-    else:
-        pass
-
 def repost_to_tg(post, text_for_replace, bot, tg_chat_id):
     print('repost_to_tg begin')
     text = post['text']
